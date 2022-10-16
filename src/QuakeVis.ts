@@ -54,7 +54,8 @@ export class QuakeVis extends gfx.GfxApp
 
         // Set the background image
         const background = new gfx.Rectangle(2, 2);
-        background.material.texture = new gfx.Texture('./assets/stars.png');
+        // background.material.texture = new gfx.Texture('./assets/stars.png');
+        background.material.color = new gfx.Color(0,0,0);
         background.layer = 1;
         this.scene.add(background);
 

@@ -41,8 +41,8 @@ export class Earth extends gfx.Transform3
 
         // 20x20 is reasonable for a good looking sphere
         // 150x150 is better for height mapping
-        //const meshResolution = 20;     
-        const meshResolution = 150;
+        const meshResolution = 20;     
+        // const meshResolution = 120;
 
         // A rotation about the Z axis is the earth's axial tilt
         this.naturalRotation.setRotationZ(-23.4 * Math.PI / 180); 
@@ -53,29 +53,85 @@ export class Earth extends gfx.Transform3
         const mapVertices: number[] = [];
         const mapNormals: number[] = [];
         const indices: number[] = [];
+        const uvs: number[] = [];
         
         // As a demo, we'll add a square with 2 triangles.
         // First, we define four vertices
-        mapVertices.push(-.5, -.5, 0);
-        mapVertices.push(.5, -.5, 0);
-        mapVertices.push(.5, .5, 0);
-        mapVertices.push(-.5, .5, 0);
+        const xIncrement = (Math.PI * 2) / meshResolution;
+        const yIncrement = Math.PI / meshResolution;
+        const textureIncrement = 1 / meshResolution;
+        for (let v = 0; v < meshResolution/2; v++) {
+            const x = v * xIncrement; 
+            const xTexture = v * textureIncrement; 
+            for (let w = 0; w < meshResolution/2; w++) {
+                const y = w * yIncrement; 
+                const yTexture = w * textureIncrement; 
+
+                // Vertices
+                // 1st Quadrant
+                mapVertices.push(x, y, 0);
+                mapVertices.push(x + xIncrement, y, 0);
+                mapVertices.push(x + xIncrement, y + yIncrement, 0);
+                mapVertices.push(x, y + yIncrement, 0);
+                // 2nd Quadrant
+                mapVertices.push(-x, y, 0);
+                mapVertices.push(-x + xIncrement, y, 0);
+                mapVertices.push(-x + xIncrement, y + yIncrement, 0);
+                mapVertices.push(-x, y + yIncrement, 0);
+                // 3rd Quadrant
+                mapVertices.push(-x, -y, 0);
+                mapVertices.push(-x + xIncrement, -y, 0);
+                mapVertices.push(-x + xIncrement, -y + yIncrement, 0);
+                mapVertices.push(-x, -y + yIncrement, 0);
+                // 4th Quadrant
+                mapVertices.push(x, -y, 0);
+                mapVertices.push(x + xIncrement, -y, 0);
+                mapVertices.push(x + xIncrement, -y + yIncrement, 0);
+                mapVertices.push(x, -y + yIncrement, 0);
+
+                // Texture Coordinates
+                // 1st Quadrant
+                uvs.push(0.5 + xTexture, 0.5 - yTexture);
+                uvs.push(0.5 + xTexture + textureIncrement, 0.5 - yTexture);
+                uvs.push(0.5 + xTexture + textureIncrement, 0.5 - yTexture - textureIncrement);
+                uvs.push(0.5 + xTexture, 0.5 - yTexture - textureIncrement);
+                // 2nd Quadrant
+                uvs.push(0.5 - xTexture - textureIncrement, 0.5 - yTexture);
+                uvs.push(0.5 - xTexture, 0.5 - yTexture);
+                uvs.push(0.5 - xTexture, 0.5 - yTexture - textureIncrement);
+                uvs.push(0.5 - xTexture - textureIncrement, 0.5 - yTexture - textureIncrement);
+                // 3rd Quadrant
+                uvs.push(0.5 - xTexture - textureIncrement, 0.5 + yTexture + textureIncrement);
+                uvs.push(0.5 - xTexture, 0.5 + yTexture + textureIncrement);
+                uvs.push(0.5 - xTexture, 0.5 + yTexture);
+                uvs.push(0.5 - xTexture - textureIncrement, 0.5 + yTexture);
+                // 4th Quadrant
+                uvs.push(0.5 + xTexture, 0.5 + yTexture + textureIncrement);
+                uvs.push(0.5 + xTexture + textureIncrement, 0.5 + yTexture + textureIncrement);
+                uvs.push(0.5 + xTexture + textureIncrement, 0.5 + yTexture);
+                uvs.push(0.5 + xTexture, 0.5 + yTexture);
+
+            }
+        }
+
 
         // The normals are always directly outward towards the camera
-        mapNormals.push(0, 0, 1);
-        mapNormals.push(0, 0, 1);
-        mapNormals.push(0, 0, 1);
-        mapNormals.push(0, 0, 1);
+        mapVertices.forEach(_ => {
+            mapNormals.push(0, 0, 1);
+        });
 
         // Next we define indices into the array for the two triangles
-        indices.push(0, 1, 2);
-        indices.push(0, 2, 3);
+        for(let i=0; i <  meshResolution * meshResolution ; i++)
+        {
+            indices.push( (i*4) + 0, (i*4) + 1, (i*4) + 2);
+            indices.push( (i*4) + 0,  (i*4) + 2,  (i*4) + 3);
+        }
 
         // Set all the earth mesh data
         this.earthMesh.setVertices(mapVertices, true);
         this.earthMesh.setNormals(mapNormals, true);
         this.earthMesh.setIndices(indices);
-        this.earthMesh.setTextureCoordinates
+        this.earthMesh.setTextureCoordinates(uvs);
         this.earthMesh.createDefaultVertexColors();
         this.earthMesh.material = this.earthMaterial;
 
