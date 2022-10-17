@@ -41,8 +41,8 @@ export class Earth extends gfx.Transform3
 
         // 20x20 is reasonable for a good looking sphere
         // 150x150 is better for height mapping
-        const meshResolution = 20;     
-        // const meshResolution = 120;
+        // const meshResolution = 20;
+        const meshResolution = 120;
 
         // A rotation about the Z axis is the earth's axial tilt
         this.naturalRotation.setRotationZ(-23.4 * Math.PI / 180); 
@@ -149,17 +149,16 @@ export class Earth extends gfx.Transform3
     {
         // Number of milliseconds in 1 year (approx.)
         const duration = 12 * 28 * 24 * 60 * 60;
-
         // TO DO: currently, the earthquake is just placed randomly on the plane
         // You will need to update this code to calculate both the map and globe positions
-        const mapPosition = new gfx.Vector3(Math.random()*6-3, Math.random()*4-2, 0);
-        const globePosition = new gfx.Vector3(Math.random()*6-3, Math.random()*4-2, 0);
+        // new gfx.Vector3(Math.random()*6-3, Math.random()*4-2, 0)
+        const mapPosition = this.convertLatLongToPlane(record.latitude,record.longitude);
+        const globePosition = this.convertLatLongToSphere(record.latitude,record.longitude);
         const earthquake = new EarthquakeMarker(mapPosition, globePosition, record, duration);
 
         // Initially, the color is set to yellow.
         // You should update this to be more a meaningful representation of the data.
-        earthquake.material.setColor(new gfx.Color(1, 1, 0));
-
+        earthquake.material.setColor(new gfx.Color(record.normalizedMagnitude, 0.6-record.normalizedMagnitude, 0.6-record.normalizedMagnitude));
         this.add(earthquake);
     }
 
@@ -188,16 +187,23 @@ export class Earth extends gfx.Transform3
     {
         // TO DO: We recommend filling in this function to put all your
         // lat,long --> plane calculations in one place.
-
-        return new gfx.Vector3();
+        const x = Math.cos(Math.PI / 180 * latitude) * Math.sin(Math.PI / 180 * longitude)
+        const y= Math.sin(Math.PI / 180 * latitude)
+        const z = Math.cos(Math.PI / 180 * latitude) * Math.cos(Math.PI / 180 * longitude)
+        return new gfx.Vector3(x,y,z);
     }
 
     public convertLatLongToPlane(latitude: number, longitude: number) : gfx.Vector3
     {
         // TO DO: We recommend filling in this function to put all your
         // lat,long --> plane calculations in one place.
-
-        return new gfx.Vector3();
+        const latRange = (90 - (-90));
+        const lonRange = (180 - (-180));
+        const mapLatRange = (Math.PI - (-Math.PI));
+        const mapLonRange = (Math.PI/2 - (-Math.PI/2));
+        const x = (((latitude - (-90)) * mapLatRange) / latRange) + (-Math.PI);
+        const y = (((longitude - (-180)) * mapLonRange) / lonRange) + (-Math.PI / 2);
+        return new gfx.Vector3(x,y,0);
     }
 
     // This function toggles the wireframe debug mode on and off
