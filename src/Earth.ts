@@ -209,68 +209,44 @@ export class Earth extends gfx.Transform3
             morphNormals.push(new gfx.Vector3(0, 0, 1));
         }
 
-        console.log(indices.length);
-
         for (let i = 0; i < indices.length; i += 3) {
             // Get all three vertices in the triangle
             const v1 = vertices[indices[i]].clone();
             const v2 = vertices[indices[i+1]].clone();
-            const v3 = vertices[indices[i + 2]].clone();
+            const v3 = vertices[indices[i+2]].clone();
 
-            // X Position Values
-            let v1X;
-            let v2X;
-            let v3X;
+            // Create a new triangle
+            const mv1 = new gfx.Vector3(0, 0, 0);
+            const mv2 = gfx.Vector3.subtract(v2, v1);
+            const mv3 = gfx.Vector3.subtract(v3, v1);
+            
+            // Compute another random triangle rotation
+            const rotationQuat = gfx.Quaternion.makeEulerAngles(
+                Math.random()*Math.PI*2,
+                Math.random()*Math.PI*2,
+                Math.random()*Math.PI*2);
+                
+            // Rotate the triangle to face in the random direction
+            mv1.rotate(rotationQuat);
+            mv2.rotate(rotationQuat);
+            mv3.rotate(rotationQuat);
 
-            if (i <= indices.length / 2) {
-                v1X = gfx.MathUtils.rescale(v1.x, -Math.PI, Math.PI, -1, 1);
-                v2X = gfx.MathUtils.rescale(v2.x, -Math.PI, Math.PI, -1, 1);
-                v3X = gfx.MathUtils.rescale(v3.x, -Math.PI, Math.PI, -1, 1);
-            }
-            else{
-                v1X = -gfx.MathUtils.rescale(v1.x, -Math.PI, Math.PI, -1, 1);
-                v2X = -gfx.MathUtils.rescale(v2.x, -Math.PI, Math.PI, -1, 1);
-                v3X = -gfx.MathUtils.rescale(v3.x, -Math.PI, Math.PI, -1, 1);
-            }
-
-            // Y Position Values
-            const v1Y = gfx.MathUtils.rescale(v1.y, -Math.PI/2, Math.PI/2, -1, 1);
-            const v2Y = gfx.MathUtils.rescale(v2.y, -Math.PI/2, Math.PI/2, -1, 1);
-            const v3Y = gfx.MathUtils.rescale(v3.y, -Math.PI/2, Math.PI/2, -1, 1);
-
-            // Z Position Values
-            let v1Z;
-            let v2Z;
-            let v3Z;
-            if (i <= indices.length / 4) {
-                v1Z = gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, -1);
-                v2Z = gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, -1);
-                v3Z = gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, -1);
-            }
-            else if (i > indices.length / 4 && i <= indices.length / 2) {
-                v1Z = -1 + gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, -1);
-                v2Z = -1 + gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, -1);
-                v3Z = -1 + gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, -1);
-            }else if (i > indices.length / 2 && i <= (indices.length/2 + indices.length/4)) {
-                v1Z = gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, 1);
-                v2Z = gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, 1);
-                v3Z = gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, 1);
-            }
-            else if (i > (indices.length/2 + indices.length/4) && i < indices.length) {
-                v1Z = 1 - gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, 1);
-                v2Z = 1 - gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, 1);
-                v3Z = 1 - gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, 1);
-            }
-
-            const mv1 = new gfx.Vector3(v1X, v1Y, v1Z);
-            const mv2 = new gfx.Vector3(v2X, v2Y, v2Z);
-            const mv3 = new gfx.Vector3(v3X, v3Y, v3Z);
+            // Compute a random position within a sphere
+            const translationQuat = gfx.Quaternion.makeEulerAngles(
+                Math.random()*Math.PI*2,
+                Math.random()*Math.PI*2,
+                Math.random()*Math.PI*2)
+            const position = gfx.Vector3.rotate(new gfx.Vector3(0, 0, Math.random()), translationQuat);
+            // Move to the random position
+            mv1.add(position);
+            mv2.add(position);
+            mv3.add(position);  
 
             morphVertices[indices[i]] = mv1;
             morphVertices[indices[i+1]] = mv2;
             morphVertices[indices[i+2]] = mv3;
         }
-
+        
         mesh.setMorphTargetVertices(morphVertices);
         mesh.setMorphTargetNormals(morphNormals);
     }
