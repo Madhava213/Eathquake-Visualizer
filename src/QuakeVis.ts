@@ -36,7 +36,7 @@ export class QuakeVis extends gfx.GfxApp
         this.gui = new GUI();
         this.date = '';
         this.viewMode = 'Map';
-        this.playbackSpeed = 0.5;
+        this.playbackSpeed = 0.3;
         this.debugMode = false;
     }
 
@@ -127,6 +127,7 @@ export class QuakeVis extends gfx.GfxApp
 
         // Update the earth animations
         this.earth.update(deltaTime);
+        
 
         // Animate the earthquakes and remove old ones
         this.earth.animateEarthquakes(this.currentTime);

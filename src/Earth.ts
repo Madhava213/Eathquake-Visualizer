@@ -155,7 +155,9 @@ export class Earth extends gfx.Transform3
                 {
                     // Global adjustment to reduce the size. You should probably update this be a
                     // more meaningful representation of the earthquake's lifespan.
-                    quake.scale.set(0.5, 0.5, 0.5);
+                    const c = gfx.MathUtils.clamp(quake.scale.x, 0, 0.5);
+                    quake.scale.set(c, c, c);
+                    quake.scale.lerp(quake.scale,new gfx.Vector3(0,0,0),playbackLife);
                 }
             }
         });
@@ -213,38 +215,125 @@ export class Earth extends gfx.Transform3
             // Get all three vertices in the triangle
             const v1 = vertices[indices[i]].clone();
             const v2 = vertices[indices[i+1]].clone();
-            const v3 = vertices[indices[i+2]].clone();
+            const v3 = vertices[indices[i + 2]].clone();
+            
+            // Get all three normals in the triangle
+            const n1 = vertices[indices[i]].clone();
+            const n2 = vertices[indices[i+1]].clone();
+            const n3 = vertices[indices[i+2]].clone();
+
+            // // Create a new triangle
+            // const mv1X = Math.cos(v1.x) * Math.sin(v1.y)
+            // const mv1Y = Math.sin(v1.x)
+            // const mv1Z = Math.cos(v1.x) * Math.cos(v1.y)
+            // const mv1 = new gfx.Vector3(mv1X, mv1Y, mv1Z);
+            
+            // const mv2X = Math.cos(v2.x) * Math.sin(v2.y)
+            // const mv2Y = Math.sin(v2.x)
+            // const mv2Z = Math.cos(v2.x) * Math.cos(v2.y)
+            // const mv2 = new gfx.Vector3(mv2X,mv2Y,mv2Z);
+
+            // const mv3X = Math.cos(v3.x) * Math.sin(v3.y)
+            // const mv3Y = Math.sin(v3.x)
+            // const mv3Z = Math.cos(v3.x) * Math.cos(v3.y)
+            // const mv3 = new gfx.Vector3(mv3X,mv3Y,mv3Z);
 
             // Create a new triangle
-            const mv1 = new gfx.Vector3(0, 0, 0);
-            const mv2 = gfx.Vector3.subtract(v2, v1);
-            const mv3 = gfx.Vector3.subtract(v3, v1);
+            const mv1X = gfx.MathUtils.rescale(v1.x,-Math.PI,Math.PI, -90,90);
+            const mv1Y = gfx.MathUtils.rescale(v1.y,-Math.PI / 2, Math.PI / 2,-180, 180);
+            const mv1 = this.convertLatLongToSphere(mv1X, mv1Y);
             
-            // Compute another random triangle rotation
-            const rotationQuat = gfx.Quaternion.makeEulerAngles(
-                Math.random()*Math.PI*2,
-                Math.random()*Math.PI*2,
-                Math.random()*Math.PI*2);
-                
-            // Rotate the triangle to face in the random direction
-            mv1.rotate(rotationQuat);
-            mv2.rotate(rotationQuat);
-            mv3.rotate(rotationQuat);
+            const mv2X = gfx.MathUtils.rescale(v2.x,-Math.PI,Math.PI, -90,90);
+            const mv2Y = gfx.MathUtils.rescale(v2.y,-Math.PI / 2, Math.PI / 2,-180, 180);
+            const mv2 = this.convertLatLongToSphere(mv2X,mv2Y);
 
-            // Compute a random position within a sphere
-            const translationQuat = gfx.Quaternion.makeEulerAngles(
-                Math.random()*Math.PI*2,
-                Math.random()*Math.PI*2,
-                Math.random()*Math.PI*2)
-            const position = gfx.Vector3.rotate(new gfx.Vector3(0, 0, Math.random()), translationQuat);
-            // Move to the random position
-            mv1.add(position);
-            mv2.add(position);
-            mv3.add(position);  
+            const mv3X = gfx.MathUtils.rescale(v3.x,-Math.PI,Math.PI, -90,90);
+            const mv3Y = gfx.MathUtils.rescale(v3.y,-Math.PI / 2, Math.PI / 2,-180, 180);
+            const mv3 = this.convertLatLongToSphere(mv3X,mv3Y);
+            
+            // // Assign Normals
+
+            // const mn1 = gfx.Vector3.subtract(mv1, new gfx.Vector3(0, 0, 0));
+            // const mn2 = gfx.Vector3.subtract(mv2, new gfx.Vector3(0, 0, 0));
+            // const mn3 = gfx.Vector3.subtract(mv3, new gfx.Vector3(0, 0, 0));
+
+            // // Compute another random triangle rotation
+            // let rotationQuat;
+            // let translationQuat;
+            // let position;
+                
+            // // MV1 //
+            // const mv1RotX = gfx.MathUtils.rescale(mv1.y, -Math.PI / 2, Math.PI / 2, 1/4, (1 + 1/4));
+            // const mv1RotY = gfx.MathUtils.rescale(mv1.x, -Math.PI, Math.PI, 1/4, (1 + 1/4));
+            // const mv1RotZ = gfx.MathUtils.rescale(mv1.x, -Math.PI, Math.PI, 1/4, (1 + 1/4));
+            // rotationQuat = gfx.Quaternion.makeEulerAngles(
+            //     mv1RotX*Math.PI*2,
+            //     mv1RotY*Math.PI*2,
+            //     mv1RotZ*Math.PI*2);
+            // mv1.rotate(rotationQuat);
+
+            // const mv1X = gfx.MathUtils.rescale(mv1.y, -Math.PI / 2, Math.PI / 2, 1/4, (1 + 1/4));
+            // const mv1Y = gfx.MathUtils.rescale(mv1.x, -Math.PI, Math.PI, 0, -1);
+            // const mv1Z = gfx.MathUtils.rescale(mv1.x, -Math.PI, Math.PI, 0, 1);
+            // // Compute a position within a sphere
+            // translationQuat = gfx.Quaternion.makeEulerAngles(
+            //     mv1X*Math.PI*2,
+            //     mv1Y*Math.PI*2,
+            //     Math.random()*Math.PI*2)
+            // position = gfx.Vector3.rotate(new gfx.Vector3(0, 0, 1), translationQuat);
+            // mv1.add(position);
+            
+
+            // // MV2 //
+            // const mv2RotX = gfx.MathUtils.rescale(mv2.y, -Math.PI / 2, Math.PI / 2, 1/4, (1 + 1/4));
+            // const mv2RotY = gfx.MathUtils.rescale(mv2.x, -Math.PI, Math.PI, 1/4, (1 + 1/4));
+            // const mv2RotZ = gfx.MathUtils.rescale(mv2.x, -Math.PI, Math.PI, 1/4, (1 + 1/4));
+            // rotationQuat = gfx.Quaternion.makeEulerAngles(
+            //     mv2RotX*Math.PI*2,
+            //     mv2RotY*Math.PI*2,
+            //     mv2RotZ*Math.PI*2);
+            // mv2.rotate(rotationQuat);
+
+            // const mv2X = gfx.MathUtils.rescale(mv2.y, -Math.PI / 2, Math.PI / 2, 1/4, (1 + 1/4));
+            // const mv2Y = gfx.MathUtils.rescale(mv2.x, -Math.PI, Math.PI, 0, -1);
+            // const mv2Z = gfx.MathUtils.rescale(mv2.x, -Math.PI, Math.PI, 0, 1);
+            // // Compute a position within a sphere
+            // translationQuat = gfx.Quaternion.makeEulerAngles(
+            //     mv2X*Math.PI*2,
+            //     mv2Y*Math.PI*2,
+            //     Math.random()*Math.PI*2)
+            // position = gfx.Vector3.rotate(new gfx.Vector3(0, 0, 1), translationQuat);
+            // mv2.add(position);
+
+            
+            // // MV3 //
+            // const mv3RotX = gfx.MathUtils.rescale(mv3.y, -Math.PI / 2, Math.PI / 2, 1/4, (1 + 1/4));
+            // const mv3RotY = gfx.MathUtils.rescale(mv3.x, -Math.PI, Math.PI, 1/4, (1 + 1/4));
+            // const mv3RotZ = gfx.MathUtils.rescale(mv3.x, -Math.PI, Math.PI, 1/4, (1 + 1/4));
+            // rotationQuat = gfx.Quaternion.makeEulerAngles(
+            //     mv3RotX*Math.PI*2,
+            //     mv3RotY*Math.PI*2,
+            //     mv3RotZ*Math.PI*2);
+            // mv3.rotate(rotationQuat);
+
+            // const mv3X = gfx.MathUtils.rescale(mv3.y, -Math.PI / 2, Math.PI / 2, 1/4, (1 + 1/4));
+            // const mv3Y = gfx.MathUtils.rescale(mv3.x, -Math.PI, Math.PI, 0, -1);
+            // const mv3Z = gfx.MathUtils.rescale(mv3.x, -Math.PI, Math.PI, 0, 1);
+            // // Compute a position within a sphere
+            // translationQuat = gfx.Quaternion.makeEulerAngles(
+            //     mv3X*Math.PI*2,
+            //     mv3Y*Math.PI*2,
+            //     Math.random()*Math.PI*2)
+            // position = gfx.Vector3.rotate(new gfx.Vector3(0, 0, 1), translationQuat);
+            // mv3.add(position);  
 
             morphVertices[indices[i]] = mv1;
             morphVertices[indices[i+1]] = mv2;
-            morphVertices[indices[i+2]] = mv3;
+            morphVertices[indices[i + 2]] = mv3;
+            
+            // morphNormals[indices[i]] = mn1;
+            // morphNormals[indices[i+1]] = mn2;
+            // morphNormals[indices[i+2]] = mn3;
         }
         
         mesh.setMorphTargetVertices(morphVertices);
