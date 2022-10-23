@@ -17,7 +17,7 @@ export class EarthquakeMarker extends gfx.MeshInstance
     public mapPosition : gfx.Vector3;
     public globePosition : gfx.Vector3;
 
-    constructor(mapPosition: gfx.Vector3, globePosition: gfx.Vector3, record: EarthquakeRecord, duration: number)
+    constructor(mapPosition: gfx.Vector3, globePosition: gfx.Vector3, record: EarthquakeRecord, duration: number, globeMode: boolean)
     {
         // If the static base mesh has not yet been created, then initialize it
         if(!EarthquakeMarker.baseMesh)
@@ -33,7 +33,12 @@ export class EarthquakeMarker extends gfx.MeshInstance
         this.globePosition = globePosition;
 
         // Set the position to the plane by default
-        this.position.copy(this.mapPosition);
+        if (globeMode) {
+            this.position.copy(this.globePosition);
+        }
+        else {
+            this.position.copy(this.mapPosition);
+        }
 
         // Create a new material for this marker. The  color is set to gray by default,
         // so you will likely want to change it to a more meaningful value.

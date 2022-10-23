@@ -25,7 +25,7 @@ export class Earth extends gfx.Transform3
         this.earthMesh = new gfx.Mesh();
         this.earthMaterial = new gfx.MorphMaterial();
 
-        this.globeMode = false;
+        this.globeMode = true;
         this.naturalRotation = new gfx.Quaternion();
         this.mouseRotation = new gfx.Quaternion();
     }
@@ -41,8 +41,8 @@ export class Earth extends gfx.Transform3
 
         // 20x20 is reasonable for a good looking sphere
         // 150x150 is better for height mapping
-        // const meshResolution = 20;
-        const meshResolution = 120;
+        const meshResolution = 20;
+        // const meshResolution = 120;
 
         // A rotation about the Z axis is the earth's axial tilt
         this.naturalRotation.setRotationZ(-23.4 * Math.PI / 180); 
@@ -60,60 +60,28 @@ export class Earth extends gfx.Transform3
         const xIncrement = (Math.PI * 2) / meshResolution;
         const yIncrement = Math.PI / meshResolution;
         const textureIncrement = 1 / meshResolution;
-        for (let v = 0; v < meshResolution/2; v++) {
-            const x = v * xIncrement; 
-            const xTexture = v * textureIncrement; 
-            for (let w = 0; w < meshResolution/2; w++) {
-                const y = w * yIncrement; 
+
+        for (let v = 0; v < meshResolution; v++) {
+            const x = v * xIncrement;
+            const xTexture = v * textureIncrement;
+            for (let w = 0; w < meshResolution; w++) {
+                const y = w * yIncrement;
                 const yTexture = w * textureIncrement; 
 
-                // Vertices
-                // 1st Quadrant
-                mapVertices.push(x, y, 0);
-                mapVertices.push(x + xIncrement, y, 0);
-                mapVertices.push(x + xIncrement, y + yIncrement, 0);
-                mapVertices.push(x, y + yIncrement, 0);
-                // 2nd Quadrant
-                mapVertices.push(-x, y, 0);
-                mapVertices.push(-x + xIncrement, y, 0);
-                mapVertices.push(-x + xIncrement, y + yIncrement, 0);
-                mapVertices.push(-x, y + yIncrement, 0);
-                // 3rd Quadrant
-                mapVertices.push(-x, -y, 0);
-                mapVertices.push(-x + xIncrement, -y, 0);
-                mapVertices.push(-x + xIncrement, -y + yIncrement, 0);
-                mapVertices.push(-x, -y + yIncrement, 0);
-                // 4th Quadrant
-                mapVertices.push(x, -y, 0);
-                mapVertices.push(x + xIncrement, -y, 0);
-                mapVertices.push(x + xIncrement, -y + yIncrement, 0);
-                mapVertices.push(x, -y + yIncrement, 0);
+                const resclaeX = gfx.MathUtils.rescale(x, 0, 2 * Math.PI, -Math.PI, Math.PI);
+                const resclaeY = gfx.MathUtils.rescale(y, 0, Math.PI, -Math.PI / 2, Math.PI / 2);
+                
+                mapVertices.push(resclaeX, resclaeY, 0);
+                mapVertices.push(resclaeX + xIncrement, resclaeY, 0);
+                mapVertices.push(resclaeX + xIncrement, resclaeY + yIncrement, 0);
+                mapVertices.push(resclaeX, resclaeY + yIncrement, 0);
 
-                // Texture Coordinates
-                // 1st Quadrant
-                uvs.push(0.5 + xTexture, 0.5 - yTexture);
-                uvs.push(0.5 + xTexture + textureIncrement, 0.5 - yTexture);
-                uvs.push(0.5 + xTexture + textureIncrement, 0.5 - yTexture - textureIncrement);
-                uvs.push(0.5 + xTexture, 0.5 - yTexture - textureIncrement);
-                // 2nd Quadrant
-                uvs.push(0.5 - xTexture - textureIncrement, 0.5 - yTexture);
-                uvs.push(0.5 - xTexture, 0.5 - yTexture);
-                uvs.push(0.5 - xTexture, 0.5 - yTexture - textureIncrement);
-                uvs.push(0.5 - xTexture - textureIncrement, 0.5 - yTexture - textureIncrement);
-                // 3rd Quadrant
-                uvs.push(0.5 - xTexture - textureIncrement, 0.5 + yTexture + textureIncrement);
-                uvs.push(0.5 - xTexture, 0.5 + yTexture + textureIncrement);
-                uvs.push(0.5 - xTexture, 0.5 + yTexture);
-                uvs.push(0.5 - xTexture - textureIncrement, 0.5 + yTexture);
-                // 4th Quadrant
-                uvs.push(0.5 + xTexture, 0.5 + yTexture + textureIncrement);
-                uvs.push(0.5 + xTexture + textureIncrement, 0.5 + yTexture + textureIncrement);
-                uvs.push(0.5 + xTexture + textureIncrement, 0.5 + yTexture);
-                uvs.push(0.5 + xTexture, 0.5 + yTexture);
-
+                uvs.push(xTexture,1 - yTexture);
+                uvs.push(xTexture + textureIncrement,1 - yTexture);
+                uvs.push(xTexture + textureIncrement,1 - yTexture - textureIncrement);
+                uvs.push(xTexture,1 - yTexture - textureIncrement);
             }
         }
-
 
         // The normals are always directly outward towards the camera
         mapVertices.forEach(_ => {
@@ -121,7 +89,7 @@ export class Earth extends gfx.Transform3
         });
 
         // Next we define indices into the array for the two triangles
-        for(let i=0; i <  meshResolution * meshResolution ; i++)
+        for(let i=0; i <  (meshResolution * meshResolution) ; i++)
         {
             indices.push( (i*4) + 0, (i*4) + 1, (i*4) + 2);
             indices.push( (i*4) + 0,  (i*4) + 2,  (i*4) + 3);
@@ -137,11 +105,21 @@ export class Earth extends gfx.Transform3
 
         // Add the mesh to this group
         this.add(this.earthMesh);
+
+        // Compute the morph vertices and normals
+        this.computeMorphTarget(this.earthMesh);
+
     }
 
     // TO DO: add animations for mesh morphing
     public update(deltaTime: number) : void
     {
+        if (this.globeMode == true) {
+            this.earthMaterial.morphAlpha = 1;
+        }
+        else {
+            this.earthMaterial.morphAlpha = 0;
+        }
         // TO DO
     }
 
@@ -154,11 +132,11 @@ export class Earth extends gfx.Transform3
         // new gfx.Vector3(Math.random()*6-3, Math.random()*4-2, 0)
         const mapPosition = this.convertLatLongToPlane(record.latitude,record.longitude);
         const globePosition = this.convertLatLongToSphere(record.latitude,record.longitude);
-        const earthquake = new EarthquakeMarker(mapPosition, globePosition, record, duration);
+        const earthquake = new EarthquakeMarker(mapPosition, globePosition, record, duration, this.globeMode);
 
         // Initially, the color is set to yellow.
         // You should update this to be more a meaningful representation of the data.
-        earthquake.material.setColor(new gfx.Color(record.normalizedMagnitude, 0.6-record.normalizedMagnitude, 0.6-record.normalizedMagnitude));
+        earthquake.material.setColor(new gfx.Color(1, normalizedMagnitude, 0));
         this.add(earthquake);
     }
 
@@ -197,12 +175,9 @@ export class Earth extends gfx.Transform3
     {
         // TO DO: We recommend filling in this function to put all your
         // lat,long --> plane calculations in one place.
-        const latRange = (90 - (-90));
-        const lonRange = (180 - (-180));
-        const mapLatRange = (Math.PI - (-Math.PI));
-        const mapLonRange = (Math.PI/2 - (-Math.PI/2));
-        const x = (((latitude - (-90)) * mapLatRange) / latRange) + (-Math.PI);
-        const y = (((longitude - (-180)) * mapLonRange) / lonRange) + (-Math.PI / 2);
+
+        const x = gfx.MathUtils.rescale(latitude,-90,90,-Math.PI,Math.PI);
+        const y = gfx.MathUtils.rescale(longitude, -180, 180, -Math.PI / 2, Math.PI / 2);
         return new gfx.Vector3(x,y,0);
     }
 
@@ -210,5 +185,93 @@ export class Earth extends gfx.Transform3
     public toggleDebugMode(debugMode : boolean)
     {
         this.earthMaterial.wireframe = debugMode;
+    }
+
+    private computeMorphTarget(mesh: gfx.Mesh): void {
+        const vArray = mesh.getVertices();
+        const nArray = mesh.getNormals();
+        const indices = mesh.getIndices();
+
+        const vertices: gfx.Vector3[] = [];
+        const normals: gfx.Vector3[] = [];
+
+        // Copy the vertices and normals into Vector3 arrays for convenience
+        for (let i = 0; i < vArray.length; i += 3) {
+            vertices.push(new gfx.Vector3(vArray[i], vArray[i + 1], vArray[i + 2]));
+            normals.push(new gfx.Vector3(nArray[i], nArray[i + 1], nArray[i + 2]));
+        }
+
+        const morphVertices: gfx.Vector3[] = [];
+        const morphNormals: gfx.Vector3[] = [];
+
+        for (let i = 0; i < vertices.length; i++) {
+            morphVertices.push(new gfx.Vector3(0, 0, 0));
+            morphNormals.push(new gfx.Vector3(0, 0, 1));
+        }
+
+        console.log(indices.length);
+
+        for (let i = 0; i < indices.length; i += 3) {
+            // Get all three vertices in the triangle
+            const v1 = vertices[indices[i]].clone();
+            const v2 = vertices[indices[i+1]].clone();
+            const v3 = vertices[indices[i + 2]].clone();
+
+            // X Position Values
+            let v1X;
+            let v2X;
+            let v3X;
+
+            if (i <= indices.length / 2) {
+                v1X = gfx.MathUtils.rescale(v1.x, -Math.PI, Math.PI, -1, 1);
+                v2X = gfx.MathUtils.rescale(v2.x, -Math.PI, Math.PI, -1, 1);
+                v3X = gfx.MathUtils.rescale(v3.x, -Math.PI, Math.PI, -1, 1);
+            }
+            else{
+                v1X = -gfx.MathUtils.rescale(v1.x, -Math.PI, Math.PI, -1, 1);
+                v2X = -gfx.MathUtils.rescale(v2.x, -Math.PI, Math.PI, -1, 1);
+                v3X = -gfx.MathUtils.rescale(v3.x, -Math.PI, Math.PI, -1, 1);
+            }
+
+            // Y Position Values
+            const v1Y = gfx.MathUtils.rescale(v1.y, -Math.PI/2, Math.PI/2, -1, 1);
+            const v2Y = gfx.MathUtils.rescale(v2.y, -Math.PI/2, Math.PI/2, -1, 1);
+            const v3Y = gfx.MathUtils.rescale(v3.y, -Math.PI/2, Math.PI/2, -1, 1);
+
+            // Z Position Values
+            let v1Z;
+            let v2Z;
+            let v3Z;
+            if (i <= indices.length / 4) {
+                v1Z = gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, -1);
+                v2Z = gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, -1);
+                v3Z = gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, -1);
+            }
+            else if (i > indices.length / 4 && i <= indices.length / 2) {
+                v1Z = -1 + gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, -1);
+                v2Z = -1 + gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, -1);
+                v3Z = -1 + gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, -1);
+            }else if (i > indices.length / 2 && i <= (indices.length/2 + indices.length/4)) {
+                v1Z = gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, 1);
+                v2Z = gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, 1);
+                v3Z = gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, 1);
+            }
+            else if (i > (indices.length/2 + indices.length/4) && i < indices.length) {
+                v1Z = 1 - gfx.MathUtils.rescale(v1.z, -Math.PI, Math.PI, 0, 1);
+                v2Z = 1 - gfx.MathUtils.rescale(v2.z, -Math.PI, Math.PI, 0, 1);
+                v3Z = 1 - gfx.MathUtils.rescale(v3.z, -Math.PI, Math.PI, 0, 1);
+            }
+
+            const mv1 = new gfx.Vector3(v1X, v1Y, v1Z);
+            const mv2 = new gfx.Vector3(v2X, v2Y, v2Z);
+            const mv3 = new gfx.Vector3(v3X, v3Y, v3Z);
+
+            morphVertices[indices[i]] = mv1;
+            morphVertices[indices[i+1]] = mv2;
+            morphVertices[indices[i+2]] = mv3;
+        }
+
+        mesh.setMorphTargetVertices(morphVertices);
+        mesh.setMorphTargetNormals(morphNormals);
     }
 }

@@ -115,7 +115,7 @@ export class QuakeVis extends gfx.GfxApp
         while(quake)
         {
             // TO DO: Calculate the actual normalized magnitude
-            const normalizedMagnitude = 1;
+            const normalizedMagnitude = quake.normalizedMagnitude;
 
             // Uncomment this line of code to start creating earthquake markers
             // They will initially be placed at random locations on a plane
